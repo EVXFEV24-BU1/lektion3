@@ -13,17 +13,42 @@
         // Repository metoder:
         // 1. Spara todos
 
+        IMenuService menuService = new SimpleMenuService();
         ITodoRepository todoRepository = new ListTodoRepository();
         ITodoService todoService = new DefaultTodoService(todoRepository);
-        ICommandService commandService = new DefaultCommandService();
+        DependencyProvider dependencyProvider = new DependencyProvider(
+            menuService,
+            todoRepository,
+            todoService
+        );
+
+        menuService.SetMenu(new LoginMenu(dependencyProvider));
 
         while (true)
         {
             string command = Console.ReadLine()!;
-            commandService.ExecuteCommand(command);
+            menuService.GetCurrentMenu().ExecuteCommand(command);
         }
 
         // Skriv '1' för att skapa en todo
+    }
+}
+
+public class DependencyProvider
+{
+    public IMenuService MenuService { get; init; }
+    public ITodoRepository TodoRepository { get; init; }
+    public ITodoService TodoService { get; init; }
+
+    public DependencyProvider(
+        IMenuService menuService,
+        ITodoRepository todoRepository,
+        ITodoService todoService
+    )
+    {
+        this.MenuService = menuService;
+        this.TodoRepository = todoRepository;
+        this.TodoService = todoService;
     }
 }
 

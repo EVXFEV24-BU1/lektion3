@@ -1,10 +1,12 @@
 public abstract class Command
 {
     public string Name { get; init; }
+    protected DependencyProvider dependencyProvider;
 
-    public Command(string name)
+    public Command(string name, DependencyProvider dependencyProvider)
     {
         this.Name = name;
+        this.dependencyProvider = dependencyProvider;
     }
 
     public abstract void Execute();
@@ -12,8 +14,8 @@ public abstract class Command
 
 public class CreateTodoCommand : Command
 {
-    public CreateTodoCommand()
-        : base("create-todo") { }
+    public CreateTodoCommand(DependencyProvider dependencyProvider)
+        : base("create-todo", dependencyProvider) { }
 
     public override void Execute()
     {
@@ -23,12 +25,36 @@ public class CreateTodoCommand : Command
 
 public class DeleteTodoCommand : Command
 {
-    public DeleteTodoCommand()
-        : base("delete-todo") { }
+    public DeleteTodoCommand(DependencyProvider dependencyProvider)
+        : base("delete-todo", dependencyProvider) { }
 
     public override void Execute()
     {
         Console.WriteLine("TODO: Delete a todo object.");
+    }
+}
+
+public class LoginCommand : Command
+{
+    public LoginCommand(DependencyProvider dependencyProvider)
+        : base("login", dependencyProvider) { }
+
+    public override void Execute()
+    {
+        Console.Write("Enter a username: ");
+        string username = Console.ReadLine()!;
+        Console.Write("Enter a password: ");
+        string password = Console.ReadLine()!;
+
+        if (username.Equals("Ironman") && password.Equals("tonystark"))
+        {
+            Console.WriteLine("You have logged in!");
+            dependencyProvider.MenuService.SetMenu(new MainMenu(dependencyProvider));
+        }
+        else
+        {
+            Console.WriteLine("Wrong username or password.");
+        }
     }
 }
 
@@ -37,12 +63,18 @@ public class DeleteTodoCommand : Command
 // Handler
 public interface ICommandService
 {
+    void RegisterCommand(Command command);
     void ExecuteCommand(string input);
 }
 
 public class DefaultCommandService : ICommandService
 {
-    private Command[] commands = [new CreateTodoCommand(), new DeleteTodoCommand()];
+    private List<Command> commands = new List<Command>();
+
+    public void RegisterCommand(Command command)
+    {
+        this.commands.Add(command);
+    }
 
     public void ExecuteCommand(string input)
     {
